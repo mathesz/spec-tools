@@ -7,7 +7,8 @@
     [spec-tools.form :as form]
     [clojure.walk :as walk])
   (:import
-    #?@(:clj
+    #?@(:bb []
+        :clj
         [(clojure.lang Var)])))
 
 #?(:clj
@@ -23,6 +24,7 @@
         ((clojure.core/resolve 'cljs.analyzer.api/resolve) ~env ~sym)
         (clojure.core/resolve ~env ~sym))))
 
+
 (defn- cljs-sym [x]
   (if (map? x)
     (:name x)
@@ -30,9 +32,10 @@
 
 (defn- clj-sym [x]
   (if (var? x)
-    (let [^Var v x]
-      (symbol (str (.name (.ns v)))
-              (str (.sym v))))
+    #?(:bb  (symbol x)
+       :clj (let [^Var v x]
+              (symbol (str (.name (.ns v)))
+                      (str (.sym v)))))
     x))
 
 (defn ->sym [x]
@@ -100,6 +103,7 @@
                       (var? y) (if (s/get-spec (-var-get y))
                                  (-var-get y)
                                  (sym-or-x y))
+                      #?@(:bb [(= 'fn x) 'clojure.core/fn])
                       (some? y) (sym-or-x y)
                       :else x))
                   x)))
@@ -187,11 +191,11 @@
     (clojure.spec.alpha/every-impl
       form
       pred
-      {:into type
+      {:into           type
        ::s/conform-all true
-       ::s/describe `(s/coll-of ~form :into ~type),
-       ::s/cpred cpred,
-       ::s/kind-form (quote nil)}
+       ::s/describe    `(s/coll-of ~form :into ~type),
+       ::s/cpred       cpred,
+       ::s/kind-form   (quote nil)}
       nil)))
 
 (defn map-of-spec [kpred vpred]
@@ -200,13 +204,13 @@
     (clojure.spec.alpha/every-impl
       `(s/tuple ~@forms)
       tuple
-      {:into {}
-       :conform-keys true
-       ::s/kfn (fn [_ v] (nth v 0))
+      {:into           {}
+       :conform-keys   true
+       ::s/kfn         (fn [_ v] (nth v 0))
        ::s/conform-all true
-       ::s/describe `(s/map-of ~@forms :conform-keys true),
-       ::s/cpred map?,
-       ::s/kind-form (quote nil)}
+       ::s/describe    `(s/map-of ~@forms :conform-keys true),
+       ::s/cpred       map?,
+       ::s/kind-form   (quote nil)}
       nil)))
 
 (defn keys-spec [{:keys [req opt req-un opt-un]}]
@@ -228,17 +232,17 @@
                       pred-exprs))]
 
     (s/map-spec-impl
-      {:req-un req-un
-       :opt-un opt-un
+      {:req-un     req-un
+       :opt-un     opt-un
        :pred-exprs pred-exprs
-       :keys-pred keys-pred
-       :opt-keys opt-keys
-       :req-specs req-specs
-       :req req
-       :req-keys req-keys
-       :opt-specs opt-specs
+       :keys-pred  keys-pred
+       :opt-keys   opt-keys
+       :req-specs  req-specs
+       :req        req
+       :req-keys   req-keys
+       :opt-specs  opt-specs
        :pred-forms pred-forms
-       :opt opt})))
+       :opt        opt})))
 
 (defn nilable-spec [pred]
   (let [form (form/resolve-form pred)]

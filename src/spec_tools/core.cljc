@@ -11,11 +11,13 @@
                        [clojure.edn]]
                 :cljs [[goog.date.UtcDateTime]
                        [cljs.reader]
-                       [cljs.spec.gen.alpha :as gen]]))
+                       [cljs.spec.gen.alpha :as gen]])
+            [clojure.string :as str])
   (:import
-    #?@(:clj
-        [(clojure.lang AFn IFn Var)
-         (java.io Writer)])))
+    #?@(:bb  [(clojure.lang AFn IFn)
+              (java.io Writer)]
+        :clj [(clojure.lang AFn IFn Var)
+              (java.io Writer)])))
 
 ;;
 ;; helpers
@@ -142,37 +144,37 @@
               default-decoder))))))
 
 (def json-transformer
-  "Transformer that transforms data between JSON and EDN."
+     "Transformer that transforms data between JSON and EDN."
   (type-transformer
-    {:name :json
-     :decoders stt/json-type-decoders
-     :encoders stt/json-type-encoders
+    {:name            :json
+     :decoders        stt/json-type-decoders
+     :encoders        stt/json-type-encoders
      :default-encoder stt/any->any}))
 
 (def string-transformer
-  "Transformer that transforms data between Strings and EDN."
+     "Transformer that transforms data between Strings and EDN."
   (type-transformer
-    {:name :string
-     :decoders stt/string-type-decoders
-     :encoders stt/string-type-encoders
+    {:name            :string
+     :decoders        stt/string-type-decoders
+     :encoders        stt/string-type-encoders
      :default-encoder stt/any->any}))
 
 (def strip-extra-keys-transformer
-  "Transformer that drop extra keys from `s/keys` specs."
+     "Transformer that drop extra keys from `s/keys` specs."
   (type-transformer
-    {:name ::strip-extra-keys
+    {:name     ::strip-extra-keys
      :decoders stt/strip-extra-keys-type-decoders}))
 
 (def strip-extra-values-transformer
-  "Transformer that drop extra values from `s/tuple` specs."
+     "Transformer that drop extra values from `s/tuple` specs."
   (type-transformer
-    {:name ::strip-extra-values
+    {:name     ::strip-extra-values
      :decoders stt/strip-extra-values-type-decoders}))
 
 (def fail-on-extra-keys-transformer
-  "Transformer that fails on extra keys in `s/keys` specs."
+     "Transformer that fails on extra keys in `s/keys` specs."
   (type-transformer
-    {:name ::fail-on-extra-keys
+    {:name     ::fail-on-extra-keys
      :decoders stt/fail-on-extra-keys-type-decoders}))
 
 ;;
@@ -218,11 +220,11 @@
        (if-not (s/invalid? conformed)
          conformed
          (let [problems (s/explain-data spec' value)
-               data {:type ::conform
+               data {:type     ::conform
                      :problems (#?(:clj  :clojure.spec.alpha/problems
                                    :cljs :cljs.spec.alpha/problems) problems)
-                     :spec spec
-                     :value value}]
+                     :spec     spec
+                     :value    value}]
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
 (defn coerce
@@ -448,15 +450,15 @@
                          (s/explain* (s/specize* spec) path via in val)
                          [{:path path
                            :pred form
-                           :val val
-                           :via via
-                           :in in}]))
+                           :val  val
+                           :via  via
+                           :in   in}]))
                      (if (s/invalid? (s/conform* this x))
                        [{:path path
                          :pred form
-                         :val x
-                         :via via
-                         :in in}]))
+                         :val  x
+                         :via  via
+                         :in   in}]))
           spec-reason (:reason this)
           with-reason (fn [problem]
                         (cond-> problem
@@ -479,9 +481,11 @@
     (let [data (clojure.core/merge {:spec form} (extra-spec-map this))]
       `(spec-tools.core/spec ~data)))
 
-  IFn
-  #?(:clj  (invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))
-     :cljs (-invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))))
+  #?@(
+      :bb   []
+      :clj  [IFn (invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))]
+      :cljs [IFn (-invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))])
+  )
 
 #?(:clj
    (defmethod print-method Spec
@@ -543,7 +547,9 @@
                    (s/form form))
                  form
                  (let [form (s/form spec)]
-                   (if-not (= form ::s/unknown) form))
+                   (if-not
+                     (or (= form ::s/unknown) (clojure.string/starts-with? (str form) "sci.impl.fns/fun/"))
+                     form))
                  (form/resolve-form spec)
                  ::s/unknown)
         info (parse/parse-spec form)
@@ -551,7 +557,7 @@
         name (-> spec meta ::s/name)
         record (map->Spec
                  (clojure.core/merge m info {:spec spec :form form :type type :leaf? (parse/leaf-type? type)}))]
-    (cond-> record name (with-meta {::s/name name}))))
+    (cond-> record name (vary-meta assoc ::s/name name))))
 
 #?(:clj
    (defmacro spec

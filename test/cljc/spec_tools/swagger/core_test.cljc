@@ -4,7 +4,8 @@
     [spec-tools.swagger.core :as swagger]
     [clojure.spec.alpha :as s]
     [spec-tools.spec :as spec]
-    #?(:clj [ring.swagger.validator :as v])
+    #?(:bb [babashka.core]
+       :clj [ring.swagger.validator :as v])
     [spec-tools.core :as st]))
 
 (s/def ::integer integer?)
@@ -192,7 +193,8 @@
                       :x-nullable true}}]
            (swagger/extract-parameter :body (s/nilable ::keys2))))))
 
-#?(:clj
+#?(:bb nil
+   :clj
    (deftest test-parameter-validation
      (let [swagger-spec (fn [schema]
                           {:swagger "2.0"
@@ -349,7 +351,8 @@
               ::swagger/responses {200 {:schema ::user}
                                    404 {:description "Ohnoes."}}})))))
 
-#?(:clj
+#?(:bb nil
+   :clj
    (deftest test-schema-validation
      (let [data {:swagger "2.0"
                  :info {:version "1.0.0"

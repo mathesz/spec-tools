@@ -5,7 +5,8 @@
             [spec-tools.core :as st]
             [spec-tools.spec :as spec])
   #?(:clj
-     (:import clojure.lang.ExceptionInfo)))
+     (:import clojure.lang.ExceptionInfo
+              java.lang.AssertionError)))
 
 (s/def ::age (s/and spec/integer? #(> % 10)))
 
@@ -211,7 +212,7 @@
     (is (ds/spec {:spec {::i int?}})))
 
   (testing ":name is required if specs are registered"
-    (is (thrown? #?(:clj Error, :cljs js/Error) (ds/spec {:spec {:i int?}})))))
+    (is (thrown? #?(:clj AssertionError, :cljs js/Error) (ds/spec {:spec {:i int?}})))))
 
 (deftest keys-spec-extra-options-test
   (testing "keys-default"

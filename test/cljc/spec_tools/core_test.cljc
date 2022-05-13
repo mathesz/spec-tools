@@ -12,6 +12,9 @@
                 :cljs cljs.spec.gen.alpha) :as gen]
             [spec-tools.transform :as stt]))
 
+
+(spec-tools.core/spec (fn [x] x))
+
 (s/def ::age (s/and spec/integer? #(> % 10)))
 (s/def ::over-a-million (s/and spec/int? #(> % 1000000)))
 (s/def ::lat spec/double?)
@@ -43,6 +46,7 @@
   (is (= :kikka (st/spec-name :kikka)))
   (is (= ::regex (st/spec-name (s/get-spec ::regex))))
   (is (= ::spec (st/spec-name (s/get-spec ::spec))))
+
   (is (= ::overridden (st/spec-name
                         (st/spec
                           {:spec (s/get-spec ::spec)
@@ -52,7 +56,7 @@
   (is (= nil (st/spec-description #{1 2})))
   (is (= "description" (st/spec-description
                          (st/spec
-                           {:spec (s/get-spec ::spec)
+                           {:spec        (s/get-spec ::spec)
                             :description "description"})))))
 
 (deftest spec?-test
@@ -85,6 +89,7 @@
 
       (testing "::s/name is retained"
         (is (= ::age (::s/name (meta (st/create-spec {:spec ::age}))))))
+
 
       (testing "anonymous functions"
 
@@ -121,58 +126,59 @@
 
         (st/spec integer?)
         `(spec-tools.core/spec
-           {:spec integer?
-            :type :long
+           {:spec  integer?
+            :type  :long
             :leaf? true})
 
         (st/spec #{pos? neg?})
         `(spec-tools.core/spec
-           {:spec #{neg? pos?}
-            :type nil
+           {:spec  #{neg? pos?}
+            :type  nil
             :leaf? true})
 
         (st/spec ::string)
         `(spec-tools.core/spec
-           {:spec string?
-            :type :string
+           {:spec  string?
+            :type  :string
             :leaf? true})
 
         (st/spec ::lat)
         `(spec-tools.core/spec
-           {:spec (spec-tools.core/spec
-                    {:spec double?
-                     :type :double
-                     :leaf? true})
-            :type :double
+           {:spec  (spec-tools.core/spec
+                     {:spec  double?
+                      :type  :double
+                      :leaf? true})
+            :type  :double
             :leaf? true})
-
         (st/spec (fn [x] (> x 10)))
         `(spec-tools.core/spec
-           {:spec (clojure.core/fn [~'x] (> ~'x 10))
-            :type nil
+           {:spec  (clojure.core/fn [~'x] (> ~'x 10))
+            :type  nil
             :leaf? true})
 
         (st/spec #(> % 10))
         `(spec-tools.core/spec
-           {:spec (clojure.core/fn [~'%] (> ~'% 10))
-            :type nil
+           {:spec  (clojure.core/fn [~'%] (> ~'% 10))
+            :type  nil
             :leaf? true})))
 
-    (testing "wrapped predicate work as a predicate"
-      (is (true? (my-integer? 1)))
-      (is (false? (my-integer? "1")))
-      (testing "ifn's work too"
-        (let [spec (st/spec #{1 2 3})]
-          (is (= 1 (spec 1)))
-          (is (= nil (spec "1"))))))
+    #?@(:bb []
+        :clj
+        [(testing "wrapped predicate work as a predicate"
+           (is (true? (my-integer? 1)))
+           (is (false? (my-integer? "1")))
+           (testing "ifn's work too"
+             (let [spec (st/spec #{1 2 3})]
+               (is (= 1 (spec 1)))
+               (is (= nil (spec "1"))))))
 
-    (testing "wrapped spec does not work as a predicate"
-      (let [my-spec (st/spec (s/keys :req [::age]))]
-        (is (thrown? #?(:clj Exception, :cljs js/Error) (my-spec {::age 20})))))
+         (testing "wrapped spec does not work as a predicate"
+           (let [my-spec (st/spec (s/keys :req [::age]))]
+             (is (thrown? #?(:clj Exception, :cljs js/Error) (my-spec {::age 20})))))])
 
     (testing "adding info"
       (let [info {:description "desc"
-                  :example 123}]
+                  :example     123}]
         (is (= info (:info (assoc my-integer? :info info))))))
 
     (testing "are specs"
@@ -181,9 +187,9 @@
 
       (testing "fully qualifed predicate symbol is returned with s/form"
         (is (= ['spec-tools.core/spec
-                {:spec #?(:clj  'clojure.core/integer?
-                          :cljs 'cljs.core/integer?)
-                 :type :long
+                {:spec  #?(:clj  'clojure.core/integer?
+                           :cljs 'cljs.core/integer?)
+                 :type  :long
                  :leaf? true}] (s/form my-integer?)))
         (is (= ['spec {:spec 'integer? :type :long :leaf? true}] (s/describe my-integer?))))
 
@@ -211,21 +217,21 @@
     (testing "explain-data"
       (let [spec (st/spec pos-int?)]
         (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]
-                                             :spec spec
-                                             :value -1}
+                                             :spec     spec
+                                             :value    -1}
                   :cljs #:cljs.spec.alpha{:problems [expected-problem]
-                                          :spec spec
-                                          :value -1})
+                                          :spec     spec
+                                          :value    -1})
                (st/explain-data spec -1)
                (s/explain-data spec -1)))))
     (testing "explain-data with reason"
       (let [spec (st/spec pos-int? {:reason "positive"})]
         (is (= #?(:clj  #:clojure.spec.alpha{:problems [(assoc expected-problem :reason "positive")]
-                                             :spec spec
-                                             :value -1}
+                                             :spec     spec
+                                             :value    -1}
                   :cljs #:cljs.spec.alpha{:problems [(assoc expected-problem :reason "positive")]
-                                          :spec spec
-                                          :value -1})
+                                          :spec     spec
+                                          :value    -1})
                (st/explain-data spec -1)
                (s/explain-data spec -1)))))))
 
@@ -273,11 +279,11 @@
                (conform ::birthdate "2014-02-18T18:25:37Z")))))))
 
 (s/def ::my-spec
-  (st/spec
-    {:spec #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
-     :description "a lowercase keyword, encoded in uppercase in string-mode"
-     :decode/string #(-> %2 name str/lower-case keyword)
-     :encode/string #(-> %2 name str/upper-case)}))
+       (st/spec
+         {:spec          #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
+          :description   "a lowercase keyword, encoded in uppercase in string-mode"
+          :decode/string #(-> %2 name str/lower-case keyword)
+          :encode/string #(-> %2 name str/upper-case)}))
 (s/def ::my-spec-map (s/keys :req [::my-spec]))
 
 (s/def ::my-type (st/spec keyword?))
@@ -340,7 +346,7 @@
 (deftest late-bind-transformers-on-decode
   (let [times (atom 0)
         spec (st/spec
-               {:spec int?
+               {:spec          int?
                 :decode/string (fn [_ value] (swap! times inc) value)})]
     (st/decode spec 1 st/string-transformer)
     (is (= 1 @times))))
@@ -431,16 +437,16 @@
                      keyword?
                      (s/or :keys (s/keys :req-un [::c1])
                            :ks (s/coll-of (s/and int?) :into #{})))))
-          value {"keys" {:c1 "1" ::c2 "kikka"}
+          value {"keys"  {:c1 "1" ::c2 "kikka"}
                  "keys2" {:c1 true}
-                 "ints" [1 "1" "invalid" "3"]}]
-      (is (= {:keys {:c1 1 ::c2 :kikka}
+                 "ints"  [1 "1" "invalid" "3"]}]
+      (is (= {:keys  {:c1 1 ::c2 :kikka}
               :keys2 {:c1 true}
-              :ints #{1 "invalid" 3}}
+              :ints  #{1 "invalid" 3}}
              (st/coerce spec value st/string-transformer)))
-      (is (= {:keys {:c1 "1" ::c2 :kikka}
+      (is (= {:keys  {:c1 "1" ::c2 :kikka}
               :keys2 {:c1 true}
-              :ints #{1 "1" "invalid" "3"}}
+              :ints  #{1 "1" "invalid" "3"}}
              (st/coerce spec value st/json-transformer)))))
   (testing "from keywords"
     (doseq [transformer [st/string-transformer st/json-transformer]]
@@ -490,10 +496,10 @@
       (st/conform! ::age "12")
       (catch #?(:clj Exception, :cljs js/Error) e
         (let [data (ex-data e)]
-          (is (= {:type ::st/conform
+          (is (= {:type     ::st/conform
                   :problems [{:path [], :pred `integer?, :val "12", :via [::age], :in []}]
-                  :spec :spec-tools.core-test/age
-                  :value "12"}
+                  :spec     :spec-tools.core-test/age
+                  :value    "12"}
                  data)))))))
 
 (deftest explain-tests
@@ -501,11 +507,11 @@
     (let [expected-problem {:path [], :pred `int?, :val "12", :via [], :in []}]
       (is (s/invalid? (st/conform spec/int? "12")))
       (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]
-                                           :spec spec/int?
-                                           :value "12"}
+                                           :spec     spec/int?
+                                           :value    "12"}
                 :cljs #:cljs.spec.alpha{:problems [expected-problem]
-                                        :spec spec/int?
-                                        :value "12"})
+                                        :spec     spec/int?
+                                        :value    "12"})
              (st/explain-data spec/int? "12")))
       (is (any? (with-out-str (st/explain spec/int? "12"))))
       (is (any? (with-out-str (st/explain spec/int? "12" nil))))))
@@ -566,8 +572,8 @@
       (is (= {:persons [{:weight 80, :height 200}]}
              (st/select-spec
                (s/keys :req-un [::persons])
-               {:TOO "MUCH"
-                :persons [{:INFOR "MATION"
+               {:TOO     "MUCH"
+                :persons [{:INFOR  "MATION"
                            :height 200
                            :weight 80}]}))))
 
@@ -646,15 +652,15 @@
              ::s/unknown))))
 
   (testing "all keys types are extracted"
-    (is (= {:type :map
-            ::parse/key->spec {:lat ::lat
-                               ::age ::age
+    (is (= {:type             :map
+            ::parse/key->spec {:lat    ::lat
+                               ::age   ::age
                                ::truth ::truth
-                               :uuid ::uuid}
+                               :uuid   ::uuid}
 
-            ::parse/keys #{::age :lat ::truth :uuid}
-            ::parse/keys-req #{::age :lat}
-            ::parse/keys-opt #{::truth :uuid}}
+            ::parse/keys      #{::age :lat ::truth :uuid}
+            ::parse/keys-req  #{::age :lat}
+            ::parse/keys-opt  #{::truth :uuid}}
 
            ;; named spec
            (info/parse-spec
@@ -678,13 +684,13 @@
                  :opt-un [::uuid]))))))
 
   (testing "ands and ors are flattened"
-    (is (= {:type :map
-            ::parse/key->spec {::age ::age
-                               ::lat ::lat
+    (is (= {:type             :map
+            ::parse/key->spec {::age  ::age
+                               ::lat  ::lat
                                ::uuid ::uuid}
 
-            ::parse/keys #{::age ::lat ::uuid}
-            ::parse/keys-req #{::age ::lat ::uuid}}
+            ::parse/keys      #{::age ::lat ::uuid}
+            ::parse/keys-req  #{::age ::lat ::uuid}}
            (info/parse-spec
              (s/keys
                :req [(or ::age (and ::uuid ::lat))]))))))
@@ -806,9 +812,9 @@
                        :bike ::bike))
 
 (s/def ::new-vehicle (s/map-of
-                      keyword?
-                      (s/or :vehicle ::vehicle
-                            :tires (s/coll-of (s/and int?) :into #{}))))
+                       keyword?
+                       (s/or :vehicle ::vehicle
+                             :tires (s/coll-of (s/and int?) :into #{}))))
 
 (s/def ::keyword keyword?)
 (s/def ::int int?)
@@ -835,10 +841,11 @@
 (def qix ::qix)
 
 #?(:clj
+   (def merged-qix-qux-spec (st/spec? (st/merge qix ::qux)))
    (deftest issue-201
      (testing "merge should work with symbols too"
        (is (st/spec? (st/merge ::qix ::qux)))
-       (is (st/spec? (st/merge qix ::qux))))))
+       (is merged-qix-qux-spec))))
 
 (s/def ::a242 int?)
 (s/def ::b242 int?)
@@ -862,28 +869,28 @@
 (s/def :db/port pos-int?)
 (s/def :db/database string?)
 (s/def ::jdbc-connection
-  (st/spec {:spec (s/keys :req-un [:db/hostname :db/port :db/database])
-            :type :dbconn}))
+       (st/spec {:spec (s/keys :req-un [:db/hostname :db/port :db/database])
+                 :type :dbconn}))
 
 (defn dbconn->url
   [_ {:keys [hostname port database]}]
-  #?(:clj (clojure.core/format "jdbc:postgres://%s:%s/%s" hostname port database)
+  #?(:clj  (clojure.core/format "jdbc:postgres://%s:%s/%s" hostname port database)
      :cljs (cljs.pprint/cl-format nil "jdbc:postgres://~a:~a/~a" hostname port database)))
 
 (def jdbc-transformer
-  (st/type-transformer
-   {:name :jdbc
-    :encoders {:dbconn dbconn->url}
-    :default-encoder stt/any->any}))
+     (st/type-transformer
+       {:name            :jdbc
+        :encoders        {:dbconn dbconn->url}
+        :default-encoder stt/any->any}))
 
 (s/def :db/connection-string (st/spec {:spec string?
-                                    :type :dbconn}))
+                                       :type :dbconn}))
 
 (deftest issue-241
   (testing "provide a spec to validate transformed values"
     (let [valid-input {:hostname "127.0.0.1" :port 5432 :database "postgres"}]
       (is (thrown? #?(:clj ClassCastException :cljs js/Error)
-                       (st/encode ::jdbc-connection valid-input jdbc-transformer)))
+                   (st/encode ::jdbc-connection valid-input jdbc-transformer)))
       (is (= (st/encode ::jdbc-connection valid-input jdbc-transformer :db/connection-string)
              "jdbc:postgres://127.0.0.1:5432/postgres")))))
 
@@ -893,8 +900,8 @@
                         {:core-test/overflow [:core-test/stackoverflow
                                               {:core-test/over [:core-test/flow]}]}]
           wrong-data [:core-test/stack
-                        {:core-test/overflow [:core-test/stackoverflow
-                                              {:core-test/over [:flow :is :not :right]}]}]]
+                      {:core-test/overflow [:core-test/stackoverflow
+                                            {:core-test/over [:flow :is :not :right]}]}]]
       (is (s/valid? ::rec-pattern correct-data))
       (is (s/valid? (st/spec ::rec-pattern) correct-data))
       (is (not (s/valid? ::rec-pattern wrong-data)))
@@ -905,26 +912,26 @@
 (s/def ::nano (s/int-in 0 100))
 (s/def ::time-basis #{:UTC :TAI})
 (s/def ::instant
-  (st/spec {:spec (s/keys :req-un [::epoch ::nano ::time-basis]) :type :instant}))
+       (st/spec {:spec (s/keys :req-un [::epoch ::nano ::time-basis]) :type :instant}))
 
 (defn tai->utc
   [_ {:keys [epoch nano time-basis] :as x}]
   (if (and (s/valid? ::instant x) (= :TAI time-basis))
-    {:epoch "Epoch converted"
-     :nano nano
+    {:epoch      "Epoch converted"
+     :nano       nano
      :time-basis :UTC}
     x))
 
 (def utc-xform
-  (st/type-transformer
-   {:name :utc
-    :encoders {:instant tai->utc}
-    :default-encoder stt/any->any}))
+     (st/type-transformer
+       {:name            :utc
+        :encoders        {:instant tai->utc}
+        :default-encoder stt/any->any}))
 
 (deftest issue-240
   (testing "Mutual recursion when using s/valid? inside a transformer"
     (let [example {:epoch 10 :nano 20 :time-basis :TAI}]
       (is (= (st/encode ::instant example utc-xform)
-             {:epoch "Epoch converted"
-              :nano 20
+             {:epoch      "Epoch converted"
+              :nano       20
               :time-basis :UTC})))))

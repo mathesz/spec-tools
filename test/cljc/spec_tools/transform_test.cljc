@@ -2,7 +2,6 @@
   (:require [clojure.test :refer [deftest testing is]]
             [spec-tools.transform :as stt]
             #?(:clj [clojure.test.check.generators :as gen])
-            #?(:clj [com.gfredericks.test.chuck.clojure-test :refer [checking]])
             #?@(:cljs [[goog.Uri]])))
 #?(:clj
    (:import java.net.URI))
@@ -84,13 +83,13 @@
             (is (decimal? (num->decimal 42.4224)))
             (is (decimal? (num->decimal (Float. 42.4223))))
             (is (decimal? (num->decimal (BigDecimal. 42.4222)))))))
-
-#?(:clj (deftest properties-string->decimal
-          (checking "Scale and Precision must be preserved" 200
-            [original-bigdec gen-bigdecimal]
-            (let [new-bigdec (stt/string->decimal _ (str original-bigdec))]
-              (is (= (.scale original-bigdec) (.scale new-bigdec)))
-              (is (= (.precision original-bigdec) (.precision new-bigdec)))))))
+(comment
+  #?(:clj (deftest properties-string->decimal
+            (checking "Scale and Precision must be preserved" 200
+                      [original-bigdec gen-bigdecimal]
+                      (let [new-bigdec (stt/string->decimal _ (str original-bigdec))]
+                        (is (= (.scale original-bigdec) (.scale new-bigdec)))
+                        (is (= (.precision original-bigdec) (.precision new-bigdec))))))))
 
 #?(:clj (deftest string->ratio
           (is (ratio? (stt/string->ratio _ "1/2")))

@@ -57,7 +57,7 @@
   (if-let [explain-data (s/explain-data spec data)]
     (binding [ansi/*enable-color* true]
       (#'expound/printer-str
-        {:print-specs? false
+        {:print-specs?       false
          :show-valid-values? false}
         (if explain-data
           (assoc explain-data

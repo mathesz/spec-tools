@@ -40,27 +40,27 @@
            (parse/parse-spec double?))))
   (testing "s/nilable"
     (is (= {::parse/item {::parse/item {:spec int?, :type :long}
-                          :type :nilable}
-            :type :nilable}
+                          :type        :nilable}
+            :type        :nilable}
            (parse/parse-spec (s/nilable (s/nilable int?))))))
   (testing "s/or"
     (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
-            :type [:or [:long :keyword]]}
+            :type         [:or [:long :keyword]]}
            (parse/parse-spec (s/or :int int? :keyword keyword?)))))
   (testing "s/and"
     (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
-            :type [:and [:long :keyword]]}
+            :type         [:and [:long :keyword]]}
            (parse/parse-spec (s/and int? keyword?)))))
   (testing "s/keys"
-    (is (= {:type :map
-            ::parse/keys #{:a :b :c :d :e ::a ::b ::c ::d ::e}
-            ::parse/keys-req #{:a :b :c :d ::a ::b ::c ::d}
-            ::parse/keys-opt #{:e ::e}
-            ::parse/key->spec {:a ::a
-                               :b ::b
-                               :c ::c
-                               :d ::d
-                               :e ::e
+    (is (= {:type             :map
+            ::parse/keys      #{:a :b :c :d :e ::a ::b ::c ::d ::e}
+            ::parse/keys-req  #{:a :b :c :d ::a ::b ::c ::d}
+            ::parse/keys-opt  #{:e ::e}
+            ::parse/key->spec {:a  ::a
+                               :b  ::b
+                               :c  ::c
+                               :d  ::d
+                               :e  ::e
                                ::a ::a
                                ::b ::b
                                ::c ::c
@@ -68,17 +68,17 @@
                                ::e ::e}}
            (parse/parse-spec ::keys)))
 
-    (is (= {:type :map
-            ::parse/keys #{:a :b :c :d :e :f :g ::a ::b ::c ::d ::e ::f ::g}
-            ::parse/keys-req #{:a :b :c :d :g ::a ::b ::c ::d ::g}
-            ::parse/keys-opt #{:e :f ::e ::f}
-            ::parse/key->spec {:a ::a
-                               :b ::b
-                               :c ::c
-                               :d ::d
-                               :e ::e
-                               :f ::f
-                               :g ::g
+    (is (= {:type             :map
+            ::parse/keys      #{:a :b :c :d :e :f :g ::a ::b ::c ::d ::e ::f ::g}
+            ::parse/keys-req  #{:a :b :c :d :g ::a ::b ::c ::d ::g}
+            ::parse/keys-opt  #{:e :f ::e ::f}
+            ::parse/key->spec {:a  ::a
+                               :b  ::b
+                               :c  ::c
+                               :d  ::d
+                               :e  ::e
+                               :f  ::f
+                               :g  ::g
                                ::a ::a
                                ::b ::b
                                ::c ::c
@@ -88,26 +88,26 @@
                                ::g ::g}}
            (parse/parse-spec ::merged))))
   (testing "s/merge"
-    (is (= {:type :map
-            ::parse/keys #{:a :b}
-            ::parse/keys-req #{:a :b}
+    (is (= {:type             :map
+            ::parse/keys      #{:a :b}
+            ::parse/keys-req  #{:a :b}
             ::parse/key->spec {:a ::a, :b ::b}}
            (parse/parse-spec (s/merge (s/keys :req-un [::a]) (s/keys :req-un [::b]))))))
   (testing "s/every"
     (is (= {::parse/item {:spec int?, :type :long}
-            :type :vector}
+            :type        :vector}
            (parse/parse-spec (s/every int?)))))
   (testing "s/coll-of"
     (is (= {::parse/item {:spec int?, :type :long}
-            :type :vector}
+            :type        :vector}
            (parse/parse-spec (s/coll-of int?))))
     (is (= {::parse/item {:spec int?, :type :long}
-            :type :set}
+            :type        :set}
            (parse/parse-spec (s/coll-of int? :into #{}))))
     (is (= {::parse/item {::parse/items [{:spec int?, :type :long}
                                          {:spec keyword?, :type :keyword}]
-                          :type [:tuple [:long :keyword]]}
-            :type :map-of}
+                          :type         [:tuple [:long :keyword]]}
+            :type        :map-of}
            (parse/parse-spec (s/coll-of (s/tuple int? keyword?) :into {})))))
   (testing "s/multi-spec"
     (is (= {:type            :multi-spec
@@ -116,11 +116,12 @@
                               :type-b ::hb}}
            (parse/parse-spec ::multi))))
   (testing "s/merge"
-    (is (= {:type :map
-            ::parse/keys #{:a :b}
-            ::parse/keys-req #{:a :b}
+    (is (= {:type             :map
+            ::parse/keys      #{:a :b}
+            ::parse/keys-req  #{:a :b}
             ::parse/key->spec {:a ::a, :b ::b}}
            (parse/parse-spec (st/merge (s/keys :req-un [::a]) (s/keys :req-un [::b])))))))
+
 
 (deftest get-keys-test
   (testing "get-keys"
